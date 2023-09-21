@@ -2,34 +2,46 @@ require("dotenv").config();
 const express = require("express");
 const app = express();
 const cors = require("cors");
-const path = require('path');
-const bodyParser = require("body-parser");
-const mongoose = require("mongoose").set("debug", true);
-const { MongoMemoryServer } = require('mongodb-memory-server');
-const { router } = require("./routes.js");
-const user = require("./model/user.js");
 const moment = require('moment');
-// Create instance of MongoMemoryServer
-const currentDir = __dirname;
-const dbPath = path.join(currentDir, 'mongodb-data');
+const path = require('path'); // don't forget to require 'path'
 
-const mongod = new MongoMemoryServer({
-  instance: {
-    dbName: 'test-db-2',
-    dbPath: dbPath,
-    storageEngine: 'wiredTiger',
-  },
-  binary: {
-    version: '4.0.3',
-  },
+const multer = require("multer"),
+    bodyParser = require("body-parser");
+
+const mongoose = require("mongoose").set("debug", true);
+const {router} = require("./routes.js");
+const {randomNumberNotInUserCollection} = require("./helpers/number");
+
+mongoose.connect(process.env.MONGO_URI ||'mongodb://127.0.0.1:27017/dlab-monitoring', {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useFindAndModify: false,
 });
 
-app.use(express.json({ limit: "50mb" }));
-app.use(express.urlencoded({ extended: true }));
+
+const user = require("./model/user.js");
+
+
+app.use(express.json({limit: "50mb"}));
+
+app.use((req, res, next) => {
+    console.log(req.method, req.url);
+    next();
+});
+
+app.use(express.urlencoded({extended: true}));
 app.use(cors());
 app.use(express.static("uploads"));
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json()); // to support JSON-encoded bodies
+app.use(
+    bodyParser.urlencoded({
+        extended: false,
+    }),
+);
+
+
+
+
 app.use(router);
 
 
@@ -559,31 +571,7 @@ app.post("/api", async (req, res) => {
     }
 });
 
-
-async function startServer() {
-    mongod.start()
-        .then(() => {
-            return mongod.getUri();
-        })
-        .then(async (mongoUri) => {
-            console.log('MongoDB In-Memory URI:', mongoUri);
-
-            // Connect mongoose to the in-memory instance
-            await mongoose.connect(mongoUri, {
-                useNewUrlParser: true,
-                useUnifiedTopology: true,
-                useFindAndModify: false,
-            });
-
-            app.listen(2000, () => {
-                console.log("Server is running on port 2000");
-            });
-        })
-        .catch(err => {
-            console.error('Error starting MongoMemoryServer:', err);
-        });
-}
-
-
-
-startServer()
+app.listen(2000, (err, data) => {
+    // console.log(err);
+    console.log("Server is Runing On port 2000");
+});
