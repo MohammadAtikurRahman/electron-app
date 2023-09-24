@@ -5,31 +5,23 @@ const cors = require("cors");
 const moment = require('moment');
 const path = require('path'); // don't forget to require 'path'
 
-const multer = require("multer"),
-    bodyParser = require("body-parser");
+const multer = require("multer");
+const bodyParser = require("body-parser");
 
 const mongoose = require("mongoose").set("debug", true);
-const {router} = require("./routes.js");
-const {randomNumberNotInUserCollection} = require("./helpers/number");
-
-mongoose.connect(process.env.MONGO_URI ||'mongodb://127.0.0.1:27017/dlab-monitoring', {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    useFindAndModify: false,
-});
-
+const { router } = require("./routes.js");
+const { randomNumberNotInUserCollection } = require("./helpers/number");
 
 const user = require("./model/user.js");
 
-
-app.use(express.json({limit: "50mb"}));
+app.use(express.json({ limit: "50mb" }));
 
 app.use((req, res, next) => {
     console.log(req.method, req.url);
     next();
 });
 
-app.use(express.urlencoded({extended: true}));
+app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 app.use(express.static("uploads"));
 app.use(bodyParser.json()); // to support JSON-encoded bodies
@@ -39,12 +31,7 @@ app.use(
     }),
 );
 
-
-
-
 app.use(router);
-
-
 
 app.use("/", (req, res, next) => {
     try {
@@ -106,9 +93,8 @@ app.get("/user-details", (req, res) => {
 app.post("/register", async (req, res) => {
     try {
         const userId = await randomNumberNotInUserCollection();
-        console.log(userId);
         if (req.body && req.body.username && req.body.password) {
-            user.find({username: req.body.username}, (err, data) => {
+            user.find({ username: req.body.username }, (err, data) => {
                 if (data.length == 0) {
                     let User = new user({
                         username: req.body.username,
@@ -176,39 +162,39 @@ app.get("/get-enumerator", async (req, res) => {
 
 app.get("/get-testscore", async (req, res) => {
     let users = await user.find({})
-      .select("-username -password -createdAt -updatedAt -__v -id -_id -userId")
-      .select("-pc._id")
-      .select("-beneficiary._id")
-      .exec();
-  
+        .select("-username -password -createdAt -updatedAt -__v -id -_id -userId")
+        .select("-pc._id")
+        .select("-beneficiary._id")
+        .exec();
+
     const formattedData = users[0].pc;
     const beneficiaries = users[0].beneficiary;
-  
+
     let result = formattedData
-      .filter(data => data.video_name !== undefined && data.video_name !== "")
-      .map(data => ({
-        video_name: data.video_name,
-        location: data.location,
-        pl_start: data.pl_start,
-        start_date_time: data.start_date_time,
-        pl_end: data.pl_end,
-        end_date_time: data.end_date_time,
-        duration: data.duration,
-      }));
-  
+        .filter(data => data.video_name !== undefined && data.video_name !== "")
+        .map(data => ({
+            video_name: data.video_name,
+            location: data.location,
+            pl_start: data.pl_start,
+            start_date_time: data.start_date_time,
+            pl_end: data.pl_end,
+            end_date_time: data.end_date_time,
+            duration: data.duration,
+        }));
+
     // Remove duplicates
     const uniqueResult = result.reduce((acc, curr) => {
-      const exists = acc.find(item => JSON.stringify(item) === JSON.stringify(curr));
-      if (!exists) {
-        acc.push(curr);
-      }
-      return acc;
+        const exists = acc.find(item => JSON.stringify(item) === JSON.stringify(curr));
+        if (!exists) {
+            acc.push(curr);
+        }
+        return acc;
     }, []);
-  
+
     return res.status(200).json({ beneficiary: beneficiaries, pc: uniqueResult });
-  });
-  
-  app.get("/get-pc", async (req, res) => {
+});
+
+app.get("/get-pc", async (req, res) => {
     try {
         let users = await user.find({});
 
@@ -254,11 +240,11 @@ app.get("/get-testscore", async (req, res) => {
                 datewiseEnd[date] = endTime;  // Set the initial end time
             }
 
-            if(moment(datewiseStart[date], "h:mm:ss A").isAfter(moment(time, "h:mm:ss A"))) {
+            if (moment(datewiseStart[date], "h:mm:ss A").isAfter(moment(time, "h:mm:ss A"))) {
                 datewiseStart[date] = time;  // Update with earlier time if found
             }
 
-            if(moment(datewiseEnd[date], "h:mm:ss A").isBefore(moment(endTime, "h:mm:ss A"))) {
+            if (moment(datewiseEnd[date], "h:mm:ss A").isBefore(moment(endTime, "h:mm:ss A"))) {
                 datewiseEnd[date] = endTime;  // Update with later time if found
             }
 
@@ -299,65 +285,65 @@ app.get("/get-testscore", async (req, res) => {
 
 
 app.get("/get-download", async (req, res) => {
-  let users = await user.find({})
-    .select("-username")
-    .select("-password")
-    .select("-createdAt")
-    .select("-updatedAt")
-    .select("-__v")
-    .select("-id")
-    .select("-_id")
-    .select("-userId")
-    .select("-beneficiary");
+    let users = await user.find({})
+        .select("-username")
+        .select("-password")
+        .select("-createdAt")
+        .select("-updatedAt")
+        .select("-__v")
+        .select("-id")
+        .select("-_id")
+        .select("-userId")
+        .select("-beneficiary");
 
-  const formattedData = users[0].pc;
+    const formattedData = users[0].pc;
 
-  // Group data by date
-  let dataByDate = {};
-  for (let data of formattedData) {
-    let dateObject = moment(data.win_end, "M/D/YYYY, h:mm:ss A");
+    // Group data by date
+    let dataByDate = {};
+    for (let data of formattedData) {
+        let dateObject = moment(data.win_end, "M/D/YYYY, h:mm:ss A");
 
-    // Check if the date is valid
-    if (!dateObject.isValid()) {
-      // If the date is not valid, skip this entry
-      continue;
+        // Check if the date is valid
+        if (!dateObject.isValid()) {
+            // If the date is not valid, skip this entry
+            continue;
+        }
+
+        let date = dateObject.format('YYYY-MM-DD');
+        if (!dataByDate[date]) {
+            dataByDate[date] = [];
+        }
+        dataByDate[date].push(data);
     }
 
-    let date = dateObject.format('YYYY-MM-DD');
-    if (!dataByDate[date]) {
-      dataByDate[date] = [];
+    // For each date, sort by time and select the earliest start and latest end
+    let result = [];
+    for (let date in dataByDate) {
+        dataByDate[date].sort((a, b) => moment(a.win_start, "M/D/YYYY, h:mm:ss A").toDate() - moment(b.win_start, "M/D/YYYY, h:mm:ss A").toDate());
+        let earliestStart = dataByDate[date][0].win_start;
+
+        dataByDate[date].sort((a, b) => moment(b.win_end, "M/D/YYYY, h:mm:ss A").toDate() - moment(a.win_end, "M/D/YYYY, h:mm:ss A").toDate());
+        let latestEnd = dataByDate[date][0].win_end;
+
+        let total_time = dataByDate[date][0].total_time;
+        let formattedTotalTime = '';
+
+        if (total_time < 60) {
+            formattedTotalTime = `${total_time} minute${total_time !== 1 ? 's' : ''}`;
+        } else {
+            const hours = Math.floor(total_time / 60);
+            const minutes = total_time % 60;
+            formattedTotalTime = `${hours} hour${hours !== 1 ? 's' : ''} ${minutes} minute${minutes !== 1 ? 's' : ''}`;
+        }
+
+        result.push({
+            earliestStart,
+            latestEnd,
+            total_time: formattedTotalTime
+        });
     }
-    dataByDate[date].push(data);
-  }
 
-  // For each date, sort by time and select the earliest start and latest end
-  let result = [];
-  for (let date in dataByDate) {
-    dataByDate[date].sort((a, b) => moment(a.win_start, "M/D/YYYY, h:mm:ss A").toDate() - moment(b.win_start, "M/D/YYYY, h:mm:ss A").toDate());
-    let earliestStart = dataByDate[date][0].win_start;
-
-    dataByDate[date].sort((a, b) => moment(b.win_end, "M/D/YYYY, h:mm:ss A").toDate() - moment(a.win_end, "M/D/YYYY, h:mm:ss A").toDate());
-    let latestEnd = dataByDate[date][0].win_end;
-
-    let total_time = dataByDate[date][0].total_time;
-    let formattedTotalTime = '';
-
-    if (total_time < 60) {
-      formattedTotalTime = `${total_time} minute${total_time !== 1 ? 's' : ''}`;
-    } else {
-      const hours = Math.floor(total_time / 60);
-      const minutes = total_time % 60;
-      formattedTotalTime = `${hours} hour${hours !== 1 ? 's' : ''} ${minutes} minute${minutes !== 1 ? 's' : ''}`;
-    }
-
-    result.push({
-      earliestStart,
-      latestEnd,
-      total_time: formattedTotalTime
-    });
-  }
-
-  return res.status(200).json(result);
+    return res.status(200).json(result);
 });
 
 
@@ -418,11 +404,11 @@ app.get("/get-school", async (req, res) => {
                 datewiseEnd[date] = endTime;
             }
 
-            if(moment(datewiseStart[date], "h:mm:ss A").isAfter(moment(time, "h:mm:ss A"))) {
+            if (moment(datewiseStart[date], "h:mm:ss A").isAfter(moment(time, "h:mm:ss A"))) {
                 datewiseStart[date] = time;
             }
 
-            if(moment(datewiseEnd[date], "h:mm:ss A").isBefore(moment(endTime, "h:mm:ss A"))) {
+            if (moment(datewiseEnd[date], "h:mm:ss A").isBefore(moment(endTime, "h:mm:ss A"))) {
                 datewiseEnd[date] = endTime;
             }
 
@@ -441,8 +427,8 @@ app.get("/get-school", async (req, res) => {
                 latestEnd: `${date}, ${datewiseEnd[date]}`,
                 total_time: formatTime(duration)
             }))
-            .filter(entry => 
-                !entry.earliestStart.includes("Invalid date") && 
+            .filter(entry =>
+                !entry.earliestStart.includes("Invalid date") &&
                 !entry.latestEnd.includes("Invalid date") &&
                 !isNaN(parseInt(entry.total_time))
             );
@@ -465,43 +451,43 @@ app.get("/get-school", async (req, res) => {
 
 
 
-  app.get("/get-vd", async (req, res) => {
+app.get("/get-vd", async (req, res) => {
     res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
     res.setHeader("Pragma", "no-cache");
     res.setHeader("Expires", "0");
     let users = await user
-      .find({})
-      .select("-username")
-      .select("-password")
-      .select("-createdAt")
-      .select("-updatedAt")
-      .select("-__v")
-      .select("-id")
-      .select("-_id")
-      .select("-pc._id")
-      .select("-pc.win_start")
-      .select("-pc.win_end")
-      .select("-pc.total_time");
-  
+        .find({})
+        .select("-username")
+        .select("-password")
+        .select("-createdAt")
+        .select("-updatedAt")
+        .select("-__v")
+        .select("-id")
+        .select("-_id")
+        .select("-pc._id")
+        .select("-pc.win_start")
+        .select("-pc.win_end")
+        .select("-pc.total_time");
+
     const formattedData = users[0].pc;
     const filteredData = formattedData.filter((obj, index, self) => {
-      return (
-        JSON.stringify(obj) !== JSON.stringify({}) &&
-        index === self.findIndex((o) => {
-          return JSON.stringify(o) === JSON.stringify(obj);
-        })
-      );
+        return (
+            JSON.stringify(obj) !== JSON.stringify({}) &&
+            index === self.findIndex((o) => {
+                return JSON.stringify(o) === JSON.stringify(obj);
+            })
+        );
     });
-  
+
     const response = {
-      userId: users[0].userId, // Adding userId
-      beneficiary: users[0].beneficiary, // Adding beneficiary
-      videoData: filteredData // video data
+        userId: users[0].userId, // Adding userId
+        beneficiary: users[0].beneficiary, // Adding beneficiary
+        videoData: filteredData // video data
     };
-  
+
     return res.status(200).json(response);
-  });
-  
+});
+
 
 app.get("/get-beneficiary", async (req, res) => {
     let users = await user
@@ -565,9 +551,9 @@ app.post("/api", async (req, res) => {
             password: saveData.password,
         });
         await newData.save();
-        res.status(201).json({success: true, data: newData});
+        res.status(201).json({ success: true, data: newData });
     } catch (error) {
-        res.status(400).json({success: false});
+        res.status(400).json({ success: false });
     }
 });
 
