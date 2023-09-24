@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
-const {getEnumerator, userLogin} = require("./controllers/enumeratorController");
+const {getEnumerator, userLogin} = require("../controllers/enumeratorController");
 
 const {
     addBeneficiary,
@@ -16,18 +16,18 @@ const {
     addBeneficiaryInBulk,
     deleteBeneficiary,
     saveMultiScore,
-} = require("./controllers/beneficiaryController");
+} = require("../controllers/beneficiaryController");
 
 const {
     findUserid,
     deletecsv,
 
-} = require("./controllers/enumeratorController");
+} = require("../controllers/enumeratorController");
 
 const {
 
     saveCsvpc
-} = require("./controllers/onlineController")
+} = require("../controllers/onlineController")
 
 
 router.get("/enumerator/:id", getEnumerator);
