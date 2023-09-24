@@ -10,7 +10,7 @@ const bodyParser = require("body-parser");
 
 // const { router } = require("./routes.js");
 const authRouter = require("./routes/authRoutes")
-app.use(authRouter)
+
 
 app.use(express.json({ limit: "50mb" }));
 
@@ -28,6 +28,8 @@ app.use(
         extended: false,
     }),
 );
+
+app.use(authRouter)
 
 // app.use(router);
 
