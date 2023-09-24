@@ -137,3 +137,5 @@ mongodb-data
 build
 install
 *.db
+*.sql
+*.db-journal
