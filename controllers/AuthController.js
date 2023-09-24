@@ -1,12 +1,13 @@
 "use strict";
-
+const { Prisma, PrismaClient } = require("@prisma/client");
 const Validator = require("validatorjs");
+const prisma = new PrismaClient()
 
 class AuthController {
     constructor() {
         this.registrationRules = {
-            email: "required|email",
-            password: "required|min:8"
+            username: "required",
+            password: "required|min:4"
         };
 
         this.loginRules = {
@@ -14,45 +15,53 @@ class AuthController {
             password: "required|min:8"
         };
     }
-    static async register() {
+    async userExists(userName) {
         try {
-            if (req.body && req.body.username && req.body.password) {
-                user.find({ username: req.body.username }, (err, data) => {
-                    if (data.length == 0) {
-                        let User = new user({
-                            username: req.body.username,
-                            password: req.body.password,
-                        });
-                        User.save((err, data) => {
-                            if (err) {
-                                res.status(400).json({
-                                    errorMessage: err,
-                                    status: false,
-                                });
-                            } else {
-                                res.status(200).json({
-                                    status: true,
-                                    title: "Registered Successfully.",
-                                });
-                            }
-                        });
-                    } else {
-                        res.status(400).json({
-                            errorMessage: `Username ${req.body.username} already exist!`,
-                            status: false,
-                        });
-                    }
-                });
-            } else {
-                res.status(400).json({
-                    errorMessage: "Add proper parameter first!",
-                    status: false,
-                });
+            const userCount = await prisma.user.count({
+                where: {
+                    username: userName,
+                }
+            })
+            if (userCount > 0) return true;
+            return false;
+        }
+        catch (e) {
+            console.log(e)
+        }
+    }
+    async register(req, res) {
+        try {
+            const request = req.body
+            const requestValidation = new Validator(request, this.registrationRules)
+            if (requestValidation.fails()) {
+                throw {
+                    status: 400,
+                    message: "Invalid Request",
+                    errors: requestValidation.errors.all()
+                }
+            }
+            if (await this.userExists(req.username)) {
+                throw ({
+                    status: 400, message: "User exists.Please try different username or Login", errors: [],
+                })
+            }
+            let user = await prisma.user.create({
+                data: {
+                    username: request.username,
+                    password: request.password
+
+                }
+            })
+            return {
+                success: true,
+                message: "Successfully created user",
+                data: user,
             }
         } catch (e) {
-            res.status(400).json({
-                errorMessage: "Something went wrong!",
-                status: false,
+            res.status(e?.status || 500).json({
+                errors: e?.errors,
+                message: e?.message,
+                success: false,
             });
         }
     }
