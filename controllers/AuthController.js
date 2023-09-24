@@ -6,7 +6,7 @@ const bcrypt = require("bcrypt")
 
 class AuthController {
     constructor() {
-        this.saltRounds = 1000;
+        this.saltRounds = 10;
         this.sale =
             this.registrationRules = {
                 username: "required",
@@ -19,9 +19,9 @@ class AuthController {
         };
     }
 
-    hashPassword(plainPassword) {
+    async hashPassword(plainPassword) {
         try {
-            return bcrypt.hash(plainPassword, this.saltRounds);
+            return await bcrypt.hash(plainPassword, this.saltRounds);
         }
         catch (e) {
             console.log("Error hashing", e);
@@ -69,7 +69,7 @@ class AuthController {
             let user = await prisma.user.create({
                 data: {
                     username: request.username,
-                    password: this.hashPassword(request.password)
+                    password: await this.hashPassword(request.password)
                 }
             })
             return res.status(200).json({
