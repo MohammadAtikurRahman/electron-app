@@ -2,18 +2,39 @@
 const { Prisma, PrismaClient } = require("@prisma/client");
 const Validator = require("validatorjs");
 const prisma = new PrismaClient()
+const bcrypt = require("bcrypt")
 
 class AuthController {
     constructor() {
-        this.registrationRules = {
-            username: "required",
-            password: "required|min:4"
-        };
+        this.saltRounds = 1000;
+        this.sale =
+            this.registrationRules = {
+                username: "required",
+                password: "required|min:4"
+            };
 
         this.loginRules = {
             email: "required|email",
             password: "required|min:8"
         };
+    }
+
+    hashPassword(plainPassword) {
+        try {
+            return bcrypt.hash(plainPassword, this.saltRounds);
+        }
+        catch (e) {
+            console.log("Error hashing", e);
+        }
+    }
+    async comparePassword(hashedPassword) {
+        try {
+            await bcrypt.compare(hashedPassword, this.saltRounds);
+        }
+        catch (e) {
+            console.log(e)
+        }
+
     }
     async userExists(userName) {
         try {
@@ -48,8 +69,7 @@ class AuthController {
             let user = await prisma.user.create({
                 data: {
                     username: request.username,
-                    password: request.password
-
+                    password: this.hashPassword(request.password)
                 }
             })
             return res.status(200).json({
@@ -64,6 +84,9 @@ class AuthController {
                 success: false,
             });
         }
+    }
+
+    login(req, res) {
     }
 }
 
