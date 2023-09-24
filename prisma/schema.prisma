@@ -6,7 +6,7 @@ datasource db {
 //onlineuser.js
 
 model Video {
-    id            Int    @id @default(autoincrement())
+    id            Int         @id @default(autoincrement())
     pcName        String
     eiin          Int
     schoolName    String
@@ -19,7 +19,7 @@ model Video {
     plEnd         String
     endDateTime   String
     duration      String
-    User          User?  @relation(fields: [userId], references: [id])
+    User          OnlineUser? @relation(fields: [userId], references: [id])
     userId        Int?
 }
 
@@ -33,18 +33,18 @@ model Track {
 }
 
 model School {
-    id         Int     @id @default(autoincrement())
+    id         Int         @id @default(autoincrement())
     pcName     String
     eiin       Int
     schoolName String
     pcId       Int
     labId      Int
     track      Track[]
-    User       User?   @relation(fields: [userId], references: [id])
+    User       OnlineUser? @relation(fields: [userId], references: [id])
     userId     Int?
 }
 
-model User {
+model OnlineUser {
     id           Int      @id @default(autoincrement())
     userId       Int
     mobileNumber String
