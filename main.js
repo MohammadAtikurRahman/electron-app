@@ -1,6 +1,6 @@
 
 require('./server');
-require('./routes.js');
+// require('./routes.js');
 
 
 const { app, BrowserWindow } = require('electron');
