@@ -40,7 +40,7 @@ class AuthController {
                     errors: requestValidation.errors.all()
                 }
             }
-            if (await this.userExists(req.username)) {
+            if (await this.userExists(request.username)) {
                 throw ({
                     status: 400, message: "User exists.Please try different username or Login", errors: [],
                 })
@@ -52,11 +52,11 @@ class AuthController {
 
                 }
             })
-            return {
+            return res.status(200).json({
                 success: true,
                 message: "Successfully created user",
                 data: user,
-            }
+            })
         } catch (e) {
             res.status(e?.status || 500).json({
                 errors: e?.errors,
