@@ -9,7 +9,8 @@ const multer = require("multer");
 const bodyParser = require("body-parser");
 
 // const { router } = require("./routes.js");
-const { randomNumberNotInUserCollection } = require("./helpers/number");
+const authRouter = require("./routes/authRoutes")
+app.use(authRouter)
 
 app.use(express.json({ limit: "50mb" }));
 
