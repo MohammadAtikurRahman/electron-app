@@ -133,3 +133,5 @@ dist
 *.swo
 package-lock.json
 .env
+mongodb-data
+build
