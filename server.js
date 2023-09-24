@@ -8,11 +8,8 @@ const path = require('path'); // don't forget to require 'path'
 const multer = require("multer");
 const bodyParser = require("body-parser");
 
-const mongoose = require("mongoose").set("debug", true);
-const { router } = require("./routes.js");
+// const { router } = require("./routes.js");
 const { randomNumberNotInUserCollection } = require("./helpers/number");
-
-const user = require("./model/user.js");
 
 app.use(express.json({ limit: "50mb" }));
 
@@ -31,7 +28,7 @@ app.use(
     }),
 );
 
-app.use(router);
+// app.use(router);
 
 app.use("/", (req, res, next) => {
     try {
@@ -87,54 +84,6 @@ app.get("/", (req, res) => {
 app.get("/user-details", (req, res) => {
     res.send({});
 });
-
-/* user register api */
-
-app.post("/register", async (req, res) => {
-    try {
-        const userId = await randomNumberNotInUserCollection();
-        if (req.body && req.body.username && req.body.password) {
-            user.find({ username: req.body.username }, (err, data) => {
-                if (data.length == 0) {
-                    let User = new user({
-                        username: req.body.username,
-                        password: req.body.password,
-                        userId: userId,
-                    });
-                    User.save((err, data) => {
-                        if (err) {
-                            res.status(400).json({
-                                errorMessage: err,
-                                status: false,
-                            });
-                        } else {
-                            res.status(200).json({
-                                status: true,
-                                title: "Registered Successfully.",
-                            });
-                        }
-                    });
-                } else {
-                    res.status(400).json({
-                        errorMessage: `Username ${req.body.username} already exist!`,
-                        status: false,
-                    });
-                }
-            });
-        } else {
-            res.status(400).json({
-                errorMessage: "Add proper parameter first!",
-                status: false,
-            });
-        }
-    } catch (e) {
-        res.status(400).json({
-            errorMessage: "Something went wrong!",
-            status: false,
-        });
-    }
-});
-
 
 app.get("/api", (req, res) => {
     user.find((err, val) => {
