@@ -27,9 +27,9 @@ class AuthController {
             console.log("Error hashing", e);
         }
     }
-    async comparePassword(hashedPassword) {
+    async comparePassword(hashedPassword, inputPassword) {
         try {
-            await bcrypt.compare(hashedPassword, this.saltRounds);
+            return await bcrypt.compare(hashedPassword, inputPassword);
         }
         catch (e) {
             console.log(e)
@@ -98,7 +98,7 @@ class AuthController {
                 })
             }
 
-            const user = prisma.user.findUnique({
+            const user = await prisma.user.findFirst({
                 where: {
                     username: request.username
                 }
@@ -123,7 +123,8 @@ class AuthController {
 
 
         } catch (e) {
-            res.status(e?.status || 500).json({
+            console.log(e)
+            return res.status(e?.status || 500).json({
                 errors: e?.errors,
                 message: e?.message,
                 success: false,
