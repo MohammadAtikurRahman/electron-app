@@ -1,5 +1,5 @@
 "use strict";
-const { Prisma, PrismaClient } = require("@prisma/client");
+const { PrismaClient } = require("@prisma/client");
 const Validator = require("validatorjs");
 const prisma = new PrismaClient()
 const bcrypt = require("bcrypt")
@@ -86,7 +86,49 @@ class AuthController {
         }
     }
 
-    login(req, res) {
+    async login(req, res) {
+        try {
+            request = req.body
+            const validation = new validation(request, this.loginRules);
+            if (validation.fails()) {
+                throw ({
+                    status: 400,
+                    message: "Invalid credentials",
+                    errors: validation.errors.all()
+                })
+            }
+
+            const user = prisma.user.findUnique({
+                where: {
+                    username: request.username
+                }
+            })
+
+            if (!user) {
+                throw {
+                    status: 400,
+                    message: "User does not exists. Please sign up first.",
+                }
+            }
+
+            if (await this.comparePassword(request.password, user.password)) {
+                return res.status(200).json({
+                    success: true,
+                    message: "Logged in successfully",
+                    data: {
+                        token: "",
+                    }
+                })
+            }
+
+
+        } catch (e) {
+            res.status(e?.status || 500).json({
+                errors: e?.errors,
+                message: e?.message,
+                success: false,
+            });
+        }
     }
 }
 
