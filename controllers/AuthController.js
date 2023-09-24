@@ -14,8 +14,8 @@ class AuthController {
             };
 
         this.loginRules = {
-            email: "required|email",
-            password: "required|min:8"
+            username: "required",
+            password: "required|min:4"
         };
     }
 
@@ -88,8 +88,8 @@ class AuthController {
 
     async login(req, res) {
         try {
-            request = req.body
-            const validation = new validation(request, this.loginRules);
+            const request = req.body
+            const validation = new Validator(request, this.loginRules);
             if (validation.fails()) {
                 throw ({
                     status: 400,
